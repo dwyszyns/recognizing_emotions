@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Analysis</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Emotion Analysis</h1>
+        <p>Upload an image to predict emotion.</p>
+        <form action="/predict_emotion/" enctype="multipart/form-data" method="post">
+            <div class="upload-section">
+                <input name="file" type="file" accept="image/*" class="file-input">
+                <button type="submit" class="btn upload-btn">Analyze</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Analysis Result</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Emotion Analysis Result</h1>
+        <div class="result-section">
+            <div class="image-preview">
+                <img src="data:image/png;base64,{{ image_data }}" alt="Uploaded Image">
+            </div>
+            <div class="emotion-result">
+                <h2>Detected Emotion: {{ emotion }}</h2>
+                <p>{{ emotion_description }}</p>
+                <a href="/" class="btn reset-btn">Try Another Image</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
