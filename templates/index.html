@@ -8,31 +8,28 @@
 </head>
 <body>
     <div class="container">
-        <!-- Menu boczne -->
         <nav class="sidebar">
             <ul>
-                <li><a href="/">Home</a></li>
-                <li><a href="/analyze-image">Analyze Image</a></li>
-                <li><a href="/camera">Camera</a></li>
-                <li><a href="/about">About</a></li>
+                <li><a href="/"><b>Home</b></a></li>
+                <li><a href="/analyze-image"><b>Analyze Image</b></a></li>
+                <li><a href="/camera"><b>Camera</b></a></li>
+                <li><a href="/about"><b>About</b></a></li>
             </ul>
         </nav>
 
-        <!-- Główna zawartość strony -->
         <main class="main-content">
             <h1>Emotion Detection</h1>
-            <p>Upload an image or use your camera to detect emotions.</p>
-
-            <form action="/predict_emotion/" enctype="multipart/form-data" method="post">
-                <input name="file" type="file" accept="image/*">
-                <input type="submit" value="Analyze Image">
-            </form>
-
+            <p>Unlock the power of emotions through AI. Our emotion detection app analyzes facial expressions in images to identify emotions like happiness, sadness, anger, and more. Upload an image or use your camera to get instant feedback!</p>
+            
+            <h2>How it works:</h2>
+            <p>1. <b>Upload an image</b> – Simply upload a photo, and our system will detect emotions such as happiness, sadness, anger, and more.<br>
+            2. <b>Use your camera</b> – Want a live feed? Open your camera and watch emotions being detected in real-time as you interact.<br>
+            3. <b>Instant results</b> – Get immediate feedback on the emotions displayed in the image or video, and learn more about how the algorithm interprets facial expressions.</p>
+            
             <h2>Examples:</h2>
             <div class="example-images">
                 <div class="example-image">
                     <img src="/static/ex1.png" alt="Example 1" class="ex1">
-                    <p>Example 1</p>
                 </div>
                 <div class="example-image">
                     <img src="/static/ex2.png" alt="Example 2">
