@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, Request
+from fastapi import FastAPI, File, UploadFile, Request, WebSocket
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -7,6 +7,7 @@ import numpy as np
 import cv2
 import base64
 import os
+import openai
 
 app = FastAPI()
 
@@ -14,12 +15,21 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 
-model = load_model('simple_cnn_emotion_model.h5')
+model = load_model('cnn_emotion_model.h5')
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
 
 emotions = ["Anger", "Disgust", "Fear", "Happiness", "Sadness", "Surprise", "Neutral", "Contempt"]
 
-def preprocess_image(image_data: bytes, img_size=(48, 48)):
+def get_emotion_description(predicted_emotion):
+    prompt = f"Describe the emotion '{predicted_emotion}' in detail, including its typical causes and effects on behavior."
+    response = openai.Completion.create(
+        engine="text-davinci-003",
+        prompt=prompt,
+        max_tokens=150
+    )
+    print(response.choices[0].text.strip())
+
+def preprocess_image(image_data: bytes, img_size:tuple =(48, 48)):
     np_arr = np.frombuffer(image_data, np.uint8)
     image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -33,7 +43,7 @@ def detect_and_mark_face(image_data: bytes):
     
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     
-    faces = face_cascade.detectMultiScale(gray_image, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+    faces = face_cascade.detectMultiScale(gray_image, scaleFactor=1.05, minNeighbors=4, minSize=(30, 30))
 
     if len(faces) == 0:
         return None
@@ -85,3 +95,30 @@ async def predict_emotion(request: Request, file: UploadFile = File(...)):
         "emotion_description": emotion_description,
         "image_data": marked_image_base64
     })
+    
+@app.websocket("/ws/emotion")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    while True:
+        data = await websocket.receive_json()
+        image_data = base64.b64decode(data['image_data'])
+
+        processed_image = preprocess_image(image_data)
+        if processed_image is None or processed_image.size == 0:
+            print("Processed image is empty")
+            await websocket.send_json({"face_detected": True, "emotion": "Error in processing image"})
+            continue
+
+        predictions = model.predict(processed_image)
+        predicted_class = np.argmax(predictions, axis=1)[0]
+        predicted_emotion = emotions[predicted_class]
+
+        await websocket.send_json({
+            "face_detected": True,
+            "emotion": predicted_emotion
+        })
+
+
+@app.get("/camera", response_class=HTMLResponse)
+async def camera(request: Request):
+    return templates.TemplateResponse("camera.html", {"request": request})
