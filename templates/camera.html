@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Detection from Camera</title>
+    <style>
+        #face-detection-status {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h2>Emotion Detection from Camera</h2>
+    <video id="video" width="640" height="480" autoplay></video>
+    <button id="analyze-btn">Analyze Emotion</button>
+
+    <!-- Miejsce na komunikaty -->
+    <div id="face-detection-status">Waiting for face detection...</div>
+
+    <script>
+        const video = document.getElementById('video');
+        const analyzeButton = document.getElementById('analyze-btn');
+        const faceDetectionStatus = document.getElementById('face-detection-status');
+        let websocket;
+    
+        // Używamy WebRTC do włączenia kamery
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(error => {
+                console.error("Error accessing the camera: ", error);
+            });
+    
+        // Połączenie z WebSocketem
+        function connectWebSocket() {
+            websocket = new WebSocket("ws://localhost:8000/ws/emotion");
+    
+            websocket.onopen = () => {
+                console.log("WebSocket connection established");
+            };
+    
+            websocket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+    
+                // Sprawdzamy, czy wykryto twarz
+                if (data.face_detected) {
+                    faceDetectionStatus.textContent = "Face detected: " + data.emotion;
+                } else {
+                    faceDetectionStatus.textContent = "No face detected. Please adjust your position.";
+                }
+            };
+    
+            websocket.onclose = () => {
+                console.log("WebSocket connection closed");
+                faceDetectionStatus.textContent = "WebSocket connection closed.";
+            };
+    
+            websocket.onerror = (error) => {
+                console.error("WebSocket error: ", error);
+                faceDetectionStatus.textContent = "WebSocket error. Please refresh the page.";
+            };
+        }
+    
+        analyzeButton.onclick = () => {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                // Capture a frame from the video
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const context = canvas.getContext('2d');
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+                // Convert the canvas to a Data URL (base64)
+                const base64data = canvas.toDataURL('image/jpeg').split(',')[1];
+    
+                // Send the frame to the server
+                websocket.send(JSON.stringify({ image_data: base64data }));
+            } else {
+                faceDetectionStatus.textContent = "WebSocket is not connected.";
+            }
+        };
+    
+        connectWebSocket();
+    </script>    
+</body>
+</html>

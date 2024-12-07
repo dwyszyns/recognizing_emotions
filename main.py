@@ -15,7 +15,8 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 
-model = load_model('cnn_emotion_model.h5')
+# model = load_model('cnn_emotion_model.h5')
+model = load_model('cnn_wiecej.h5')
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
 
 emotions = ["Anger", "Disgust", "Fear", "Happiness", "Sadness", "Surprise", "Neutral", "Contempt"]
@@ -58,6 +59,10 @@ def detect_and_mark_face(image_data: bytes):
 @app.get("/", response_class=HTMLResponse)
 async def main(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+
+@app.get("/analyze-image", response_class=HTMLResponse)
+async def analyze_image(request: Request):
+    return templates.TemplateResponse("analyze_image.html", {"request": request})
 
 @app.post("/predict_emotion/")
 async def predict_emotion(request: Request, file: UploadFile = File(...)):
