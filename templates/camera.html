@@ -5,6 +5,103 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Emotion Detection from Camera</title>
     <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f0f4f8; /* Light background */
+            display: flex;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            flex: 1;    
+        }
+
+        .sidebar {
+            background-color: #407baf;
+            padding: 20px 0;
+            width: 30vh;
+            height: 100vh;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            width: 100%;
+        }
+
+        .sidebar ul li {
+            margin: 15px 0;
+        }
+
+        .sidebar ul li a {
+            text-decoration: none;
+            color: #fff;
+            font-size: 22px; /* Increased font size */
+            font-weight: bold;
+            padding: 15px; /* Increased padding */
+            display: block;
+            text-align: center;
+        }
+
+        .sidebar ul li a:hover {
+            background-color: #305d88;
+            transition: background-color 0.3s ease;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #ffffff; /* White background for contrast */
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-content h1 {
+            font-size: 2.5em;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .main-content p {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        #video {
+            border: 2px solid #407baf;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #407baf;
+            color: #fff;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #305d88;
+        }
+
         #face-detection-status {
             margin-top: 10px;
             font-weight: bold;
@@ -13,12 +110,25 @@
     </style>
 </head>
 <body>
-    <h2>Emotion Detection from Camera</h2>
-    <video id="video" width="640" height="480" autoplay></video>
-    <button id="analyze-btn">Analyze Emotion</button>
+    <div class="container">
+        <nav class="sidebar">
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/analyze-image">Analyze Image</a></li>
+                <li><a href="/camera">Camera</a></li>
+                <li><a href="/about">About</a></li>
+            </ul>
+        </nav>
 
-    <!-- Miejsce na komunikaty -->
-    <div id="face-detection-status">Waiting for face detection...</div>
+        <main class="main-content">
+            <h1>Emotion Detection from Camera</h1>
+            <p>Analyze emotions in real-time using your webcam. Make sure to allow camera access!</p>
+            
+            <video id="video" width="640" height="480" autoplay></video>
+            <button id="analyze-btn">Analyze Emotion</button>
+            <div id="face-detection-status">Waiting for face detection...</div>
+        </main>
+    </div>
 
     <script>
         const video = document.getElementById('video');
@@ -26,16 +136,15 @@
         const faceDetectionStatus = document.getElementById('face-detection-status');
         let websocket;
     
-        // Używamy WebRTC do włączenia kamery
         navigator.mediaDevices.getUserMedia({ video: true })
             .then(stream => {
                 video.srcObject = stream;
             })
             .catch(error => {
                 console.error("Error accessing the camera: ", error);
+                faceDetectionStatus.textContent = "Unable to access camera. Please allow camera access.";
             });
     
-        // Połączenie z WebSocketem
         function connectWebSocket() {
             websocket = new WebSocket("ws://localhost:8000/ws/emotion");
     
@@ -46,7 +155,6 @@
             websocket.onmessage = (event) => {
                 const data = JSON.parse(event.data);
     
-                // Sprawdzamy, czy wykryto twarz
                 if (data.face_detected) {
                     faceDetectionStatus.textContent = "Face detected: " + data.emotion;
                 } else {
@@ -67,17 +175,13 @@
     
         analyzeButton.onclick = () => {
             if (websocket && websocket.readyState === WebSocket.OPEN) {
-                // Capture a frame from the video
                 const canvas = document.createElement('canvas');
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
                 const context = canvas.getContext('2d');
                 context.drawImage(video, 0, 0, canvas.width, canvas.height);
     
-                // Convert the canvas to a Data URL (base64)
                 const base64data = canvas.toDataURL('image/jpeg').split(',')[1];
-    
-                // Send the frame to the server
                 websocket.send(JSON.stringify({ image_data: base64data }));
             } else {
                 faceDetectionStatus.textContent = "WebSocket is not connected.";
