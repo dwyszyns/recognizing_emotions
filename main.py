@@ -64,6 +64,10 @@ async def main(request: Request):
 async def analyze_image(request: Request):
     return templates.TemplateResponse("analyze_image.html", {"request": request})
 
+@app.get("/about", response_class=HTMLResponse)
+async def analyze_image(request: Request):
+    return templates.TemplateResponse("about.html", {"request": request})
+
 @app.post("/predict_emotion/")
 async def predict_emotion(request: Request, file: UploadFile = File(...)):
     image_data = await file.read()
