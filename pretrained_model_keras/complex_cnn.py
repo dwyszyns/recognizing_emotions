@@ -7,7 +7,6 @@ from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, Input, Concatenate
 from tensorflow.keras.utils import to_categorical
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import train_test_split
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import LambdaCallback
 
@@ -17,7 +16,7 @@ predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
 
 emotions = ["0", "1", "2", "3", "4", "5", "6", "7"]
 
-def create_cnn_model(input_shape_image, num_classes, learning_rate, conv_layers=6, dense_layers=2, filters=[32, 64, 128, 256]):
+def create_cnn_model(input_shape_image, num_classes, learning_rate, conv_layers=6, filters=[32, 64, 128, 256]):
     model = Sequential()
     # input_image = Input(shape=input_shape_image)
     # x = input_image
@@ -43,8 +42,8 @@ def create_cnn_model(input_shape_image, num_classes, learning_rate, conv_layers=
     return model
 
 def train_model(X_train: np.array, y_train: np.array, model:Sequential, batch_size: int =64, epochs: int =30):
-    print_lr_callback = LambdaCallback(on_epoch_begin=lambda epoch, logs: print(f"Learning Rate at epoch {epoch+1}: {model.optimizer.lr.numpy()}"))
-    history = model.fit(X_train, y_train, batch_size=batch_size, epochs=epochs, validation_split=0.2, callbacks=[print_lr_callback])
+    # print_lr_callback = LambdaCallback(on_epoch_begin=lambda epoch, logs: print(f"Learning Rate at epoch {epoch+1}: {model.optimizer.lr.numpy()}"))
+    history = model.fit(X_train, y_train, batch_size=batch_size, epochs=epochs, validation_split=0.2)
     
     train_losses = history.history['loss']
     val_losses = history.history['val_loss']
@@ -111,36 +110,40 @@ def load_data_with_landmarks(emotion_list: list, base_dir: str ="train", img_siz
 def change_image(landmarks: np.array, images: np.array):
     colored_images = []
     for i in range(len(images)):
-        jaw_points = landmarks[i][0:17]
-        forehead_points = landmarks[i][17:27]
-
-        points = np.concatenate((jaw_points, forehead_points[::-1]), axis=0)
-
-        points = np.array(points, dtype=np.int32)
-
-        image = images[i] 
-        mask = np.zeros((image.shape[0], image.shape[1]), dtype=np.uint8)
-
-        cv2.fillConvexPoly(mask, points, 255)
-
-        if len(image.shape) == 3:
-            mask_3ch = cv2.merge([mask, mask, mask])
+        if np.all(landmarks[i] == 0):  # Sprawdzenie, czy landmarks to same zera
+            masked_face = images[i]
         else:
-            mask_3ch = mask
+            jaw_points = landmarks[i][0:17]
+            forehead_points = landmarks[i][17:27]
 
-        result = cv2.bitwise_and(image, mask_3ch)
+            points = np.concatenate((jaw_points, forehead_points[::-1]), axis=0)
 
-        background = np.full_like(image, 0)
-        masked_face = np.where(mask_3ch == 255, result, background)
+            points = np.array(points, dtype=np.int32)
+
+            image = images[i] 
+            mask = np.zeros((image.shape[0], image.shape[1]), dtype=np.uint8)
+
+            cv2.fillConvexPoly(mask, points, 255)
+
+            if len(image.shape) == 3:
+                mask_3ch = cv2.merge([mask, mask, mask])
+            else:
+                mask_3ch = mask
+
+            result = cv2.bitwise_and(image, mask_3ch)
+
+            background = np.full_like(image, 0)
+            masked_face = np.where(mask_3ch == 255, result, background)
 
         colored_images.append(cv2.cvtColor(masked_face, cv2.COLOR_BGR2RGB) if len(image.shape) == 3 else masked_face)
     return np.array(colored_images).reshape(-1, 48, 48, 1)
 
 
 if __name__ == "__main__":
-    emotions = ["0", "1", "2", "3", "4", "5", "6", "7"]
-    X_train, y_train, landmarks_train = load_data_with_landmarks(emotions, "train")
-    X_test, y_test, landmarks_test = load_data_with_landmarks(emotions, "test")
+    # emotions = ["0", "1", "2", "3", "4", "5", "6", "7"]
+    emotions = ["1", "2", "3", "4", "5", "6", "7"]
+    X_train, y_train, landmarks_train = load_data_with_landmarks(emotions, "RAF-DB/train")
+    X_test, y_test, landmarks_test = load_data_with_landmarks(emotions, "RAF-DB/test")
     X_train = change_image(landmarks_train, X_train)
     X_test = change_image(landmarks_train, X_test)
     
@@ -157,14 +160,13 @@ if __name__ == "__main__":
     runs=6
     for run in range(runs):
         print(f"Training run {run + 1}/{runs}")
-        model = create_cnn_model(input_shape, 
-                                 num_classes=len(emotions), 
-                                 learning_rate=0.001, 
-                                 conv_layers=4, 
-                                 dense_layers=2, 
+        model = create_cnn_model(input_shape,
+                                 num_classes=len(emotions),
+                                 learning_rate=0.001,
+                                 conv_layers=3,
                                  filters=[32, 64, 128, 256])
 
-        trained_model, train_losses, val_losses = train_model(X_train, y_train, model, epochs=15, batch_size=32)
+        trained_model, train_losses, val_losses = train_model(X_train, y_train, model, epochs=10, batch_size=32)
 
         all_epoch_train_losses.append(train_losses)
         all_epoch_test_losses.append(val_losses)
@@ -176,12 +178,13 @@ if __name__ == "__main__":
         all_train_accuracies.append(train_accuracy)
         all_test_accuracies.append(test_accuracy)
 
-        trained_model.save(f"cnn_model_{run}.h5")
+        # trained_model.save(f"cnn_model_{run}.h5")
     
     avg_epoch_train_losses = np.mean(all_epoch_train_losses, axis=0)
     avg_epoch_test_losses = np.mean(all_epoch_test_losses, axis=0)
     
-    with open("complex_ck+_results_lr0,001_epochs15_batch32_warstwy4.txt", "w") as f:
+    file_name = "complex_RAFDB_results_lr0,001_epochs10_batch32_warstwy3.txt"
+    with open(file_name, "w") as f:
         f.write("Average training loss per epoch across all runs:\n")
         for epoch, loss in enumerate(avg_epoch_train_losses, 1):
             f.write(f"Epoch {epoch}: {loss:.4f}\n")
@@ -200,4 +203,4 @@ if __name__ == "__main__":
         f.write("\nAverage Train Accuracy: {:.2f}%\n".format(avg_train_accuracy))
         f.write("Average Test Accuracy: {:.2f}%\n".format(avg_test_accuracy))
 
-    print("Training complete. Results saved to training_results.txt")
+    print(f"Training complete. Results saved to {file_name}")
