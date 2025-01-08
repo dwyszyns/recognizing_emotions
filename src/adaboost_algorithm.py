@@ -2,9 +2,6 @@ import numpy as np
 import cv2
 import glob
 import dlib
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 from sklearn.metrics import accuracy_score
 from sklearn.decomposition import PCA
@@ -118,13 +115,13 @@ def train(model, it_num, X_train, y_train, X_test, y_test):
     avg_train_accuracy = np.mean(scores_train)
     avg_test_accuracy = np.mean(scores_test)
     
-    return scores_train, scores_test, models, avg_train_accuracy, avg_test_accuracy
+    return models, avg_train_accuracy, avg_test_accuracy
 
 if __name__ == "__main__":
     emotions = ["0", "1", "2", "3", "4", "5", "6", "7"]
 
-    X_train, y_train, landmarks_train = load_data_with_landmarks(emotions, "RAF-DB/train")
-    X_test, y_test, landmarks_test = load_data_with_landmarks(emotions, "RAF-DB/test")
+    X_train, y_train, landmarks_train = load_data_with_landmarks(emotions, "train")
+    X_test, y_test, landmarks_test = load_data_with_landmarks(emotions, "test")
     X_train = change_image(landmarks_train, X_train)
     X_test = change_image(landmarks_train, X_test)
 
@@ -137,9 +134,8 @@ if __name__ == "__main__":
 
     ada_model = AdaBoostClassifier(algorithm="SAMME.R", n_estimators=30, learning_rate=1.0)
     
-    scores_train, scores_test, models, avg_train_accuracy, avg_test_accuracy = train(ada_model, X_train_pca, y_train, X_test_pca, y_test)
+    models, avg_train_accuracy, avg_test_accuracy = train(ada_model, 5, X_train_pca, y_train, X_test_pca, y_test)
 
-    best_model_index = np.argmax(scores_test)
-    best_model = models[best_model_index]
+    print(avg_test_accuracy)
 
     
