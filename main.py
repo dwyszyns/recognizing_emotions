@@ -1,5 +1,5 @@
 from fastapi import FastAPI, File, UploadFile, Request, WebSocket
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from tensorflow.keras.models import load_model
@@ -28,7 +28,7 @@ def preprocess_image(image_data: bytes, img_size:tuple =(48, 48)):
     normalized_image = resized_image / 255.0
     return normalized_image.reshape(1, img_size[0], img_size[1], 1)
 
-def validate_image(file: UploadFile, allowed_formats=("jpeg", "jpg", "png"), max_size_mb=5):
+def validate_image(file: UploadFile, allowed_formats=("jpeg", "jpg", "png"), max_size_mb=0.5):
     file_extension = file.filename.split(".")[-1].lower()
     if file_extension not in allowed_formats:
         raise ValueError(f"Invalid file format: {file_extension}. Allowed formats are: {', '.join(allowed_formats)}")
@@ -78,10 +78,10 @@ async def predict_emotion(request: Request, file: UploadFile = File(...)):
         marked_image_base64 = detect_and_mark_face(image_data)
 
         if marked_image_base64 is None:
-            return templates.TemplateResponse("error.html", {
-                "request": request,
-                "error_message": "No face detected. Please upload an image with a clear face."
-            })
+            return JSONResponse(
+                status_code=400,
+                content={"error": "No face detected. Please upload an image with a clear face."}
+            )
 
         processed_image = preprocess_image(image_data)
         predictions = model.predict(processed_image)
@@ -96,7 +96,6 @@ async def predict_emotion(request: Request, file: UploadFile = File(...)):
             "Sadness": "A feeling of sorrow or unhappiness.",
             "Surprise": "A feeling of astonishment or shock.",
             "Neutral": "A neutral or unexpressive state.",
-            # "Contempt": "A feeling that a person or thing is beneath consideration."
         }
         
         emotion_description = emotion_descriptions.get(predicted_emotion, "No description available.")
@@ -109,10 +108,10 @@ async def predict_emotion(request: Request, file: UploadFile = File(...)):
         })
     
     except ValueError as e:
-        return templates.TemplateResponse("error.html", {
-            "request": request,
-            "error_message": str(e)
-        })
+        return JSONResponse(
+            status_code=422,
+            content={"error": str(e)}
+        )
     
 @app.websocket("/ws/emotion")
 async def websocket_endpoint(websocket: WebSocket):
