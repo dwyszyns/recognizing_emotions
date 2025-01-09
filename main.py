@@ -7,7 +7,6 @@ import numpy as np
 import cv2
 import base64
 import os
-import openai
 
 app = FastAPI()
 
@@ -19,16 +18,7 @@ templates = Jinja2Templates(directory="templates")
 model = load_model('cnn_wiecej.h5')
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
 
-emotions = ["Anger", "Disgust", "Fear", "Happiness", "Sadness", "Surprise", "Neutral", "Contempt"]
-
-def get_emotion_description(predicted_emotion):
-    prompt = f"Describe the emotion '{predicted_emotion}' in detail, including its typical causes and effects on behavior."
-    response = openai.Completion.create(
-        engine="text-davinci-003",
-        prompt=prompt,
-        max_tokens=150
-    )
-    print(response.choices[0].text.strip())
+emotions = ["Anger", "Disgust", "Fear", "Happiness", "Sadness", "Surprise", "Neutral"]
 
 def preprocess_image(image_data: bytes, img_size:tuple =(48, 48)):
     np_arr = np.frombuffer(image_data, np.uint8)
@@ -37,6 +27,17 @@ def preprocess_image(image_data: bytes, img_size:tuple =(48, 48)):
     resized_image = cv2.resize(gray_image, img_size)
     normalized_image = resized_image / 255.0
     return normalized_image.reshape(1, img_size[0], img_size[1], 1)
+
+def validate_image(file: UploadFile, allowed_formats=("jpeg", "jpg", "png"), max_size_mb=5):
+    file_extension = file.filename.split(".")[-1].lower()
+    if file_extension not in allowed_formats:
+        raise ValueError(f"Invalid file format: {file_extension}. Allowed formats are: {', '.join(allowed_formats)}")
+    
+    file_size_mb = len(file.file.read()) / (1024 * 1024)
+    file.file.seek(0)
+    if file_size_mb > max_size_mb:
+        raise ValueError(f"File is too large: {file_size_mb:.2f} MB. Maximum allowed size is {max_size_mb} MB.")
+
 
 def detect_and_mark_face(image_data: bytes):
     np_arr = np.frombuffer(image_data, np.uint8)
@@ -70,40 +71,48 @@ async def analyze_image(request: Request):
 
 @app.post("/predict_emotion/")
 async def predict_emotion(request: Request, file: UploadFile = File(...)):
-    image_data = await file.read()
+    try:
+        validate_image(file)
+        image_data = await file.read()
 
-    marked_image_base64 = detect_and_mark_face(image_data)
+        marked_image_base64 = detect_and_mark_face(image_data)
 
-    if marked_image_base64 is None:
+        if marked_image_base64 is None:
+            return templates.TemplateResponse("error.html", {
+                "request": request,
+                "error_message": "No face detected. Please upload an image with a clear face."
+            })
+
+        processed_image = preprocess_image(image_data)
+        predictions = model.predict(processed_image)
+        predicted_class = np.argmax(predictions, axis=1)[0]
+        predicted_emotion = emotions[predicted_class]
+
+        emotion_descriptions = {
+            "Anger": "A strong feeling of annoyance or displeasure.",
+            "Disgust": "A feeling of revulsion or profound disapproval.",
+            "Fear": "An unpleasant emotion caused by the threat of danger or pain.",
+            "Happiness": "A state of well-being and contentment.",
+            "Sadness": "A feeling of sorrow or unhappiness.",
+            "Surprise": "A feeling of astonishment or shock.",
+            "Neutral": "A neutral or unexpressive state.",
+            # "Contempt": "A feeling that a person or thing is beneath consideration."
+        }
+        
+        emotion_description = emotion_descriptions.get(predicted_emotion, "No description available.")
+        
+        return templates.TemplateResponse("result.html", {
+            "request": request,
+            "emotion": predicted_emotion,
+            "emotion_description": emotion_description,
+            "image_data": marked_image_base64
+        })
+    
+    except ValueError as e:
         return templates.TemplateResponse("error.html", {
             "request": request,
-            "error_message": "No face detected. Please upload an image with a clear face."
+            "error_message": str(e)
         })
-
-    processed_image = preprocess_image(image_data)
-    predictions = model.predict(processed_image)
-    predicted_class = np.argmax(predictions, axis=1)[0]
-    predicted_emotion = emotions[predicted_class]
-
-    emotion_descriptions = {
-        "Anger": "A strong feeling of annoyance or displeasure.",
-        "Disgust": "A feeling of revulsion or profound disapproval.",
-        "Fear": "An unpleasant emotion caused by the threat of danger or pain.",
-        "Happiness": "A state of well-being and contentment.",
-        "Sadness": "A feeling of sorrow or unhappiness.",
-        "Surprise": "A feeling of astonishment or shock.",
-        "Neutral": "A neutral or unexpressive state.",
-        "Contempt": "A feeling that a person or thing is beneath consideration."
-    }
-    
-    emotion_description = emotion_descriptions.get(predicted_emotion, "No description available.")
-    
-    return templates.TemplateResponse("result.html", {
-        "request": request,
-        "emotion": predicted_emotion,
-        "emotion_description": emotion_description,
-        "image_data": marked_image_base64
-    })
     
 @app.websocket("/ws/emotion")
 async def websocket_endpoint(websocket: WebSocket):
