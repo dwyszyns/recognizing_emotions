@@ -1,24 +1,32 @@
 import pytest
 from fastapi.testclient import TestClient
-from main import app
+from fastapi import UploadFile
+from main import app, validate_image, preprocess_image, detect_and_mark_face
+import io
+import cv2
+import numpy as np
 
 client = TestClient(app)
 
 # --- Testy Walidacyjne ---
-@pytest.mark.parametrize(
-    "file_path, expected_status_code, expected_error_message",
-    [
-        ("tests/image1.jpg", 200, None),
-        ("tests/not_image.txt", 422, "Invalid file format"),
-        ("tests/large_image.jpg", 422, "File is too large"),
-    ]
-)
-def test_file_validation(file_path, expected_status_code, expected_error_message):
-    with open(file_path, "rb") as file:
-        response = client.post("/predict_emotion/", files={"file": file})
-    assert response.status_code == expected_status_code
-    if expected_error_message:
-        assert expected_error_message in response.text
+def test_integration_valid_image():
+    with open("tests/image1.jpg", "rb") as img:
+        response = client.post("/predict_emotion/", files={"file": img})
+    assert response.status_code == 200
+    assert "emotion" in response.text
+
+def test_integration_invalid_format():
+    with open("tests/not_image.txt", "rb") as txt:
+        response = client.post("/predict_emotion/", files={"file": txt})
+    assert response.status_code == 422
+    assert "Invalid file format" in response.text
+
+def test_integration_large_file():
+    with open("tests/large_image.jpg", "rb") as large_file:
+        response = client.post("/predict_emotion/", files={"file": large_file})
+    assert response.status_code == 422
+    assert "File is too large" in response.text
+
 
 # --- Testy Akceptacyjne ---
 @pytest.mark.parametrize(
@@ -51,6 +59,28 @@ def test_image_functionality(file_path, expected_status_code, expected_response_
         response = client.post("/predict_emotion/", files={"file": img})
     assert response.status_code == expected_status_code
     assert expected_response_text in response.text
+    
+def test_validate_image_valid_file():
+    valid_file = UploadFile(filename="tests/image1.jpg", file=io.BytesIO(b"valid image content"))
+    valid_file.file.seek(0)
+    try:
+        validate_image(valid_file)
+    except Exception:
+        pytest.fail("validate_image raised an exception unexpectedly!")
+        
+def test_preprocess_image():
+    test_image = np.ones((100, 100, 3), dtype=np.uint8) * 255  # White image
+    _, buffer = cv2.imencode('.jpg', test_image)
+    preprocessed_image = preprocess_image(buffer.tobytes())
+    assert preprocessed_image.shape == (1, 48, 48, 1)
+    assert np.max(preprocessed_image) <= 1.0  # Normalized
+
+def test_detect_and_mark_face_no_faces():
+    test_image = np.zeros((100, 100, 3), dtype=np.uint8)  # Black image
+    _, buffer = cv2.imencode('.jpg', test_image)
+    marked_image = detect_and_mark_face(buffer.tobytes())
+    assert marked_image is None
+    
 
 # --- Testy Stron HTML ---
 @pytest.mark.parametrize(
