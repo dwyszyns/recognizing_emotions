@@ -14,7 +14,6 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 
-# model = load_model('cnn_emotion_model.h5')
 model = load_model('cnn_wiecej.h5')
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
 
@@ -78,11 +77,17 @@ async def predict_emotion(request: Request, file: UploadFile = File(...)):
         marked_image_base64 = detect_and_mark_face(image_data)
 
         if marked_image_base64 is None:
-            return JSONResponse(
-                status_code=400,
-                content={"error": "No face detected. Please upload an image with a clear face."}
-            )
-
+            if "application/json" in request.headers.get("Accept", ""):
+                return JSONResponse(
+                    status_code=400,
+                    content={"error": "No face detected. Please upload an image with a clear face."}
+                )
+            else:
+                return templates.TemplateResponse(
+                    "error.html", 
+                    {"request": request, "error_message": "Brak wykrytej twarzy. Proszę przesłać obraz z wyraźną twarzą."}
+                )
+            
         processed_image = preprocess_image(image_data)
         predictions = model.predict(processed_image)
         predicted_class = np.argmax(predictions, axis=1)[0]

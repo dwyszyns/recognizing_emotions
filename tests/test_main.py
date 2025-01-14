@@ -46,6 +46,7 @@ def test_emotion_prediction(file_path, expected_emotions):
     assert "emotion" in response.text
     assert any(emotion in response.text for emotion in expected_emotions)
 
+
 # --- Testy Funkcjonalne ---
 @pytest.mark.parametrize(
     "file_path, expected_status_code, expected_response_text",
