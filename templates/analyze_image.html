@@ -4,128 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Analyze Image - Emotion Detection</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f0f4f8; /* Light background */
-            display: flex;
-            height: 100vh;
-        }
+    <link rel="stylesheet" href="static/css/style.css">
 
-        .container {
-            display: flex;
-            flex: 1;
-        }
-
-        .sidebar {
-            background-color: #407baf;
-            padding: 20px 0;
-            width: 30vh;
-            height: 100vh;
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .sidebar ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            width: 100%;
-        }
-
-        .sidebar ul li {
-            margin: 15px 0;
-        }
-
-        .sidebar ul li a {
-            text-decoration: none;
-            color: #fff;
-            font-size: 22px; /* Increased font size */
-            font-weight: bold;
-            padding: 15px; /* Increased padding */
-            display: block;
-            text-align: center;
-        }
-
-        .sidebar ul li a:hover {
-            background-color: #305d88;
-            transition: background-color 0.3s ease;
-        }
-
-        .main-content {
-            flex: 1;
-            padding: 40px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background-color: #ffffff; /* White background for contrast */
-            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .main-content h1 {
-            font-size: 2.5em; /* Increased font size */
-            color: #333;
-            margin-bottom: 30px;
-        }
-
-        .main-content p {
-            font-size: 1.5em; /* Increased font size */
-            color: #666;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px; /* Increased gap between elements */
-        }
-
-        input[type="file"] {
-            padding: 15px; /* Increased padding */
-            font-size: 1.2em; /* Increased font size */
-            border: 2px solid #407baf;
-            border-radius: 10px; /* Slightly rounded corners */
-            color: #333;
-            cursor: pointer;
-        }
-
-        input[type="submit"] {
-            padding: 15px 30px; /* Increased padding */
-            font-size: 1.2em; /* Increased font size */
-            border: none;
-            border-radius: 10px; /* Slightly rounded corners */
-            background-color: #407baf;
-            color: #fff;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        input[type="submit"]:hover {
-            background-color: #305d88;
-        }
-
-        .btn {
-            padding: 15px 30px; /* Increased padding */
-            font-size: 1.2em; /* Increased font size */
-            border-radius: 10px; /* Slightly rounded corners */
-            text-decoration: none;
-            background-color: #407baf;
-            color: #fff;
-            font-weight: bold;
-            transition: background-color 0.3s ease;
-        }
-
-        .btn:hover {
-            background-color: #305d88;
-        }
-    </style>
 </head>
 <body>
     <div class="container">
@@ -137,7 +17,8 @@
                 <li><a href="/about">About</a></li>
             </ul>
         </nav>
-
+        <nav class="cont">
+        </nav>
         <main class="main-content">
             <h1>Analyze Image</h1>
             <p>Upload an image to analyze emotions.</p>
@@ -147,6 +28,7 @@
                 <input type="submit" value="Analyze Image">
             </form>
         </main>
+        <div class="container2"> </div>
     </div>
 </body>
 </html>
