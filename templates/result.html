@@ -4,120 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Emotion Analysis Result</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f0f4f8;
-            display: flex;
-            height: 100vh;
-        }
-
-        .container {
-            display: flex;
-            flex: 1;
-        }
-
-        .sidebar {
-            background-color: #407baf;
-            padding: 20px 0;
-            width: 30vh;
-            height: 100vh;
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .sidebar ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            width: 100%;
-        }
-
-        .sidebar ul li {
-            margin: 15px 0;
-        }
-
-        .sidebar ul li a {
-            text-decoration: none;
-            color: #fff;
-            font-size: 22px; /* Increased font size */
-            font-weight: bold;
-            padding: 15px; /* Increased padding */
-            display: block;
-            text-align: center;
-        }
-
-        .sidebar ul li a:hover {
-            background-color: #305d88;
-            transition: background-color 0.3s ease;
-        }
-
-        .main-content {
-            flex: 1;
-            padding: 40px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background-color: #ffffff;
-            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .main-content h1 {
-            font-size: 2.5em;
-            color: #333;
-            margin-bottom: 20px;
-        }
-
-        .result-section {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-            margin-top: 20px;
-        }
-
-        .image-preview img {
-            width: 500px; /* Fixed width */
-            height: auto; /* Maintain aspect ratio */
-            border: 2px solid #407baf;
-            border-radius: 10px;
-        }
-
-        .emotion-result {
-            text-align: left;
-            max-width: 400px;
-        }
-
-        .emotion-result h2 {
-            font-size: 1.5em;
-            color: #407baf;
-            margin-bottom: 10px;
-        }
-
-        .emotion-result p {
-            font-size: 1.2em;
-            color: #666;
-            margin-bottom: 20px;
-        }
-
-        .reset-btn {
-            padding: 10px 20px;
-            border-radius: 5px;
-            text-decoration: none;
-            background-color: #407baf;
-            color: #fff;
-            font-weight: bold;
-            font-size: 1em;
-            transition: background-color 0.3s ease;
-        }
-
-        .reset-btn:hover {
-            background-color: #305d88;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
     <div class="container">
@@ -129,7 +16,8 @@
                 <li><a href="/about">About</a></li>
             </ul>
         </nav>
-
+        <nav class="cont">
+        </nav>
         <main class="main-content">
             <h1>Emotion Analysis Result</h1>
             <div class="result-section">
@@ -140,6 +28,7 @@
                 <div class="emotion-result">
                     <h2>Detected Emotion: {{ emotion }}</h2>
                     <p>{{ emotion_description }}</p>
+                    <br/>
                     <a href="/analyze-image" class="reset-btn">Try Another Image</a>
                 </div>
             </div>
