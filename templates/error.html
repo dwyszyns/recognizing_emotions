@@ -4,13 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Error - Face Not Detected</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
     <div class="container">
-        <h1>Error: Face Not Detected</h1>
-        <p>{{ error_message }}</p>
-        <a href="/" class="btn reset-btn">Try Another Image</a>
+        <nav class="sidebar">
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/analyze-image">Analyze Image</a></li>
+                <li><a href="/camera">Camera</a></li>
+                <li><a href="/about">About</a></li>
+            </ul>
+        </nav>
+        <nav class="cont">
+        </nav>
+        <main class="main-content">
+            <h1>Error: Face Not Detected</h1>
+            <p>Face not detected. Please ensure your face is clearly visible to the camera and try again.</p>
+            <p>Please send an image in JPG, JPEG, or PNG format, with a size of up to 500 MB.</p>
+            <a href="/" class="btn reset-btn">Try Another Image</a>
+        </main>
     </div>
 </body>
 </html>
