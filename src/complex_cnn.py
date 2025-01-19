@@ -99,6 +99,6 @@ if __name__ == "__main__":
     dataset = preprocess_images_from_dataset(labels)
     dataset = scale_and_one_hot_encode(dataset, len(labels))
 
-    train_losses, val_losses = run_cnn_experiments(dataset, runs=2)
+    train_losses, val_losses = run_cnn_experiments(dataset, runs=5)
     
     make_plot_losses_per_epochs(train_losses)
