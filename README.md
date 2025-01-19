@@ -33,12 +33,20 @@
   pip install -r requirements.txt
   ```
 
-### 3. Uruchomienie serwisu do rozpoznawania emocji ze zdjęć i kamery:
+## Uruchomienie serwisu do rozpoznawania emocji ze zdjęć i kamery:
   ```bash
   uvicorn main:app --reload
   ```
 
-### Uruchomienie jednej z metod uczenia maszynowego w celach nauczenia modelu na zbiorze danych:
+## Uruchomienie jednej z metod uczenia maszynowego w celach nauczenia modelu na zbiorze danych:
   Należy ściągnąć zbiór danych i podzielić na dwa katalogi: train oraz test. Następnie należy uruchomić jedną z metod w folderze src. 
+
   Najwyższe średnie wyniki uzyskanie na zbiorze RAF-DB to około 56% na danych testowych oraz 66% na danych treningowych.
   Najwyższe średnie wyniki uzyskanie na zbiorze CK+ to około 81% na danych testowych oraz 90% na danych treningowych.
+
+
+# Opis struktury projektu
+  Tu opisać wszystkie pliki i ich zawartości
+
+# Opis testów aplikacji
+Tu opisać wszystkie pliki i ich zawartości
