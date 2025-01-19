@@ -6,6 +6,7 @@ import glob
 from sklearn.metrics import accuracy_score
 from scipy.signal import correlate2d
 import tensorflow as tf
+from datetime import datetime
 
 class Convolution:
     def __init__(self, input_shape, filter_size, num_filters):
@@ -156,34 +157,45 @@ def cross_entropy_loss_gradient(actual_labels, predicted_probs):
     return gradient
 
 
-def train_network(X, y, conv, pool, full, X_test, y_test, lr=0.001, epochs=100):
+def create_batches(X, y, batch_size):
+    n_samples = X.shape[0]
+    indices = np.arange(n_samples)
+    np.random.shuffle(indices)
+    
+    for start_idx in range(0, n_samples, batch_size):
+        end_idx = min(start_idx + batch_size, n_samples)
+        batch_indices = indices[start_idx:end_idx]
+        yield X[batch_indices], y[batch_indices]
+
+
+def train_network(X, y, conv, pool, full, X_test, y_test, epochs=100, batch_size=20):
     epoch_train_losses = []
     epoch_test_losses = []
     for epoch in range(epochs):
         total_loss = 0.0
         correct_predictions = 0
+        batches = list(create_batches(X, y, batch_size))
+        X_batches, y_batches = zip(*batches)
+        for j, batch in enumerate(batches):
+            for i in range(len(batch)):
+                conv_out = conv.forward(X_batches[j][i])
+                pool_out = pool.forward(conv_out)
+                full_out = full.forward(pool_out)
 
-        # Training loop
-        for i in range(len(X)):
-            # Forward pass
-            conv_out = conv.forward(X[i])
-            pool_out = pool.forward(conv_out)
-            full_out = full.forward(pool_out)
+                loss = cross_entropy_loss(tf.reshape(full_out, [-1]), tf.convert_to_tensor(y_batches[j][i], dtype=tf.float32))
+                total_loss += loss
 
-            loss = cross_entropy_loss(tf.reshape(full_out, [-1]), tf.convert_to_tensor(y[i], dtype=tf.float32))
-            total_loss += loss
+                one_hot_pred = tf.one_hot(tf.argmax(full_out), depth=len(y_batches[j][i]), on_value=1.0, off_value=0.0)
+                num_pred = tf.argmax(one_hot_pred)
+                num_y = tf.argmax(y_batches[j][i])
 
-            one_hot_pred = tf.one_hot(tf.argmax(full_out), depth=len(y[i]), on_value=1.0, off_value=0.0)
-            num_pred = tf.argmax(one_hot_pred)
-            num_y = tf.argmax(y[i])
-
-            if tf.reduce_all(tf.equal(num_pred, num_y)):
-                correct_predictions += 1
-            
-            gradient = cross_entropy_loss_gradient(y[i], tf.reshape(full_out, [-1])).numpy()
-            full_back = full.backward(tf.convert_to_tensor(gradient, dtype=tf.float32))  
-            pool_back = pool.backward(full_back)
-            conv_back = conv.backward(pool_back)
+                if tf.reduce_all(tf.equal(num_pred, num_y)):
+                    correct_predictions += 1
+                
+                gradient = cross_entropy_loss_gradient(y_batches[j][i], tf.reshape(full_out, [-1])).numpy()
+                full_back = full.backward(tf.convert_to_tensor(gradient, dtype=tf.float32))  
+                pool_back = pool.backward(full_back)
+                conv_back = conv.backward(pool_back)
 
         average_loss = total_loss / len(X)
         epoch_train_losses.append(average_loss)
@@ -231,29 +243,6 @@ def predict(input_sample, conv, pool, full):
     return predictions
 
 
-def augment_image(image):
-    if random.random() < 0.5:
-        image = cv2.flip(image, 1)
-
-    angle = random.randint(-15, 15)
-    (h, w) = image.shape[:2]
-    center = (w // 2, h // 2)
-    M = cv2.getRotationMatrix2D(center, angle, 1.0)
-    image = cv2.warpAffine(image, M, (w, h))
-
-    value = random.randint(-30, 30)
-    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    hsv[:, :, 2] = np.clip(hsv[:, :, 2] + value, 0, 255)
-    image = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
-
-    alpha = random.uniform(0.8, 1.2)
-    image = cv2.convertScaleAbs(image, alpha=alpha, beta=0)
-
-    noise = np.random.randint(0, 50, image.shape, dtype='uint8')
-    image = cv2.add(image, noise)
-
-    return image
-
 def extract_landmarks(image, predictor, detector):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     rects = detector(gray, 1)
@@ -267,6 +256,14 @@ def extract_landmarks(image, predictor, detector):
     else:
         return np.zeros((68 * 2,))
 
+def replace_zero_landmarks(landmarks):
+    zero_landmarks = np.zeros((68, 2), dtype=int)
+    
+    processed_landmarks = [
+        landmark if not np.all(landmark == 0) else zero_landmarks
+        for landmark in landmarks
+    ]
+    return np.array(processed_landmarks)
 
 def load_data_with_landmarks(emotion_list, base_dir="train", img_size=(48, 48)):
     X = []
@@ -282,17 +279,14 @@ def load_data_with_landmarks(emotion_list, base_dir="train", img_size=(48, 48)):
         for path in image_paths:
             image = cv2.imread(path)
             image_resized = cv2.resize(image, img_size) 
-
-            # image_resized = augment_image(image_resized)
-
             landmark_vector = extract_landmarks(image, predictor, detector)
             landmarks.append(landmark_vector)
 
             X.append(cv2.cvtColor(image_resized, cv2.COLOR_BGR2GRAY))
             y.append(label)
         print(f"Total {emotion} images: {len(image_paths)}")
-    
-    X = np.array(X).reshape(-1, img_size[0], img_size[1], 1)
+    landmarks = replace_zero_landmarks(landmarks)
+    X = np.array(X)
     y = np.array(y)
     landmarks = np.array(landmarks)
     
@@ -310,13 +304,54 @@ def calculate_accuracy(X, y, conv, pool, full):
     accuracy = accuracy_score(predictions, y) * 100
     return accuracy
 
+def change_image(landmarks, images):
+    colored_images = []
+    for i in range(len(images)):
+        jaw_points = landmarks[i][0:17]  # Punkty żuchwy
+        forehead_points = landmarks[i][17:27]  # Punkty górnej części twarzy
+
+        points = np.concatenate((jaw_points, forehead_points[::-1]), axis=0)
+
+        points = np.array(points, dtype=np.int32)
+
+        image = images[i] 
+        mask = np.zeros((image.shape[0], image.shape[1]), dtype=np.uint8)
+
+        cv2.fillConvexPoly(mask, points, 255)
+
+        if len(image.shape) == 3:
+            mask_3ch = cv2.merge([mask, mask, mask])
+        else:
+            mask_3ch = mask
+
+        result = cv2.bitwise_and(image, mask_3ch)
+
+        background = np.full_like(image, 0)
+        masked_face = np.where(mask_3ch == 255, result, background)
+
+        colored_images.append(cv2.cvtColor(masked_face, cv2.COLOR_BGR2RGB) if len(image.shape) == 3 else masked_face)
+    return np.array(colored_images).reshape(-1, 48, 48, 1)
+
+
+def godzina():
+    aktualna_godzina = datetime.now()
+    sformatowana_godzina = aktualna_godzina.strftime("%H:%M:%S")
+    print("Aktualna godzina:", sformatowana_godzina)
+
+
 if __name__ == "__main__":
+    np.random.seed(42)
+    tf.random.set_seed(42)
+
     emotions = ["0", "1", "2", "3", "4", "5", "6", "7"]
+    # emotions = ["1", "2", "3", "4", "5", "6", "7"]
     X_train, y_train, landmarks_train = load_data_with_landmarks(emotions, "train")
     X_test, y_test, landmarks_test = load_data_with_landmarks(emotions, "test")
+    X_train = change_image(landmarks_train, X_train)
+    X_test = change_image(landmarks_train, X_test)
     X_train = X_train / 255.0
     X_test = X_test / 255.0
-    print(X_train)
+
     y_train = np.eye(len(emotions))[y_train]
     y_test = np.eye(len(emotions))[y_test]
     
@@ -327,16 +362,18 @@ if __name__ == "__main__":
     all_epoch_test_losses = []
     all_train_accuracies = []
     all_test_accuracies = []
-    
-    for run in range(1):
-        print(f"Training run {run + 1}/10")
+    runs=6
+    for run in range(runs):
+        print(f"Training run {run + 1}/{runs}")
 
         conv = Convolution(X_train[0].shape, 6, 1)
         pool = MaxPool(2)
-        full = Fully_Connected(441, 8, adam_lr=0.001)
+        full = Fully_Connected(441, len(emotions), adam_lr=0.001)
+        godzina()
 
-        epoch_train_losses, epoch_test_losses = train_network(X_train, y_train, conv, pool, full, X_test, y_test, lr=0.001, epochs=5)
-        
+        epoch_train_losses, epoch_test_losses = train_network(X_train, y_train, conv, pool, full, X_test, y_test, 
+                                                              epochs=20, batch_size=16)
+        godzina()
         all_epoch_train_losses.append(epoch_train_losses)
         all_epoch_test_losses.append(epoch_test_losses)
 
@@ -349,8 +386,9 @@ if __name__ == "__main__":
     
     avg_epoch_train_losses = np.mean(all_epoch_train_losses, axis=0)
     avg_epoch_test_losses = np.mean(all_epoch_test_losses, axis=0)
-
-    with open("training_results.txt", "w") as f:
+    
+    name_file = "rCK+training_results_lr=0,001_epochs=20_runs=6_batch16.txt"
+    with open(name_file, "w") as f:
         f.write("Average training loss per epoch across all runs:\n")
         for epoch, loss in enumerate(avg_epoch_train_losses, 1):
             f.write(f"Epoch {epoch}: {loss:.4f}\n")
@@ -360,13 +398,13 @@ if __name__ == "__main__":
             f.write(f"Epoch {epoch}: {loss:.4f}\n")
         
         f.write("\nTrain and Test Accuracy for each run:\n")
-        for run in range(10):
+        for run in range(runs):
             f.write(f"Run {run + 1} - Train Accuracy: {all_train_accuracies[run]:.2f}%, "
                     f"Test Accuracy: {all_test_accuracies[run]:.2f}%\n")
 
-        avg_train_accuracy = np.mean(all_train_accuracies)
-        avg_test_accuracy = np.mean(all_test_accuracies)
+        avg_train_accuracy = round(np.mean(all_train_accuracies)*100, 4)
+        avg_test_accuracy = round(np.mean(all_test_accuracies)*100, 4)
         f.write("\nAverage Train Accuracy: {:.2f}%\n".format(avg_train_accuracy))
         f.write("Average Test Accuracy: {:.2f}%\n".format(avg_test_accuracy))
 
-    print("Training complete. Results saved to training_results.txt")
+    print(f"Training complete. Results saved to {name_file}")

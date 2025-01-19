@@ -157,13 +157,26 @@ def cross_entropy_loss_gradient(actual_labels, predicted_probs):
     return gradient
 
 
-def train_network(X, y, conv, pool, full, X_test, y_test, lr=0.001, epochs=100):
+def create_batches(X, y, batch_size):
+    n_samples = X.shape[0]
+    indices = np.arange(n_samples)
+    np.random.shuffle(indices)
+    
+    for start_idx in range(0, n_samples, batch_size):
+        end_idx = min(start_idx + batch_size, n_samples)
+        batch_indices = indices[start_idx:end_idx]
+        yield X[batch_indices], y[batch_indices]
+
+
+def train_network(X, y, conv, pool, full, X_test, y_test, epochs=100):
     epoch_train_losses = []
     epoch_test_losses = []
     for epoch in range(epochs):
         total_loss = 0.0
         correct_predictions = 0
-
+        # batches = create_batches(X, y, batch_size=32)
+        # for batch in batches:
+            # for i in range(len(batch)):
         for i in range(len(X)):
             conv_out = conv.forward(X[i])
             pool_out = pool.forward(conv_out)
@@ -229,29 +242,6 @@ def predict(input_sample, conv, pool, full):
     predictions = full.forward(flattened_output)
     return predictions
 
-
-def augment_image(image):
-    if random.random() < 0.5:
-        image = cv2.flip(image, 1)
-
-    angle = random.randint(-15, 15)
-    (h, w) = image.shape[:2]
-    center = (w // 2, h // 2)
-    M = cv2.getRotationMatrix2D(center, angle, 1.0)
-    image = cv2.warpAffine(image, M, (w, h))
-
-    value = random.randint(-30, 30)
-    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    hsv[:, :, 2] = np.clip(hsv[:, :, 2] + value, 0, 255)
-    image = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
-
-    alpha = random.uniform(0.8, 1.2)
-    image = cv2.convertScaleAbs(image, alpha=alpha, beta=0)
-
-    noise = np.random.randint(0, 50, image.shape, dtype='uint8')
-    image = cv2.add(image, noise)
-
-    return image
 
 def extract_landmarks(image, predictor, detector):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -353,7 +343,8 @@ if __name__ == "__main__":
     np.random.seed(42)
     tf.random.set_seed(42)
 
-    emotions = ["0", "1", "2", "3", "4", "5", "6", "7"]
+    # emotions = ["0", "1", "2", "3", "4", "5", "6", "7"]
+    emotions = ["1", "2", "3", "4", "5", "6", "7"]
     X_train, y_train, landmarks_train = load_data_with_landmarks(emotions, "RAF-DB/train")
     X_test, y_test, landmarks_test = load_data_with_landmarks(emotions, "RAF-DB/test")
     X_train = change_image(landmarks_train, X_train)
@@ -377,10 +368,11 @@ if __name__ == "__main__":
 
         conv = Convolution(X_train[0].shape, 6, 1)
         pool = MaxPool(2)
-        full = Fully_Connected(441, 8, adam_lr=0.01)
+        full = Fully_Connected(441, len(emotions), adam_lr=1.0)
         godzina()
 
-        epoch_train_losses, epoch_test_losses = train_network(X_train, y_train, conv, pool, full, X_test, y_test, lr=0.001, epochs=20)
+        epoch_train_losses, epoch_test_losses = train_network(X_train, y_train, conv, pool, full, X_test, 
+                                                              y_test, epochs=20)
         godzina()
         all_epoch_train_losses.append(epoch_train_losses)
         all_epoch_test_losses.append(epoch_test_losses)
@@ -395,7 +387,7 @@ if __name__ == "__main__":
     avg_epoch_train_losses = np.mean(all_epoch_train_losses, axis=0)
     avg_epoch_test_losses = np.mean(all_epoch_test_losses, axis=0)
 
-    with open("RAFDBtraining_results_0,001_epochs=20_runs=6.txt", "w") as f:
+    with open("RAFDBtraining_results_lr=1,0_epochs=20_runs=6.txt", "w") as f:
         f.write("Average training loss per epoch across all runs:\n")
         for epoch, loss in enumerate(avg_epoch_train_losses, 1):
             f.write(f"Epoch {epoch}: {loss:.4f}\n")
