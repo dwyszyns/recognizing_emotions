@@ -17,7 +17,7 @@ if __name__ == "__main__":
     
     _, _, models, avg_train_accuracy, avg_test_accuracy = train_model(ada_model, 5, X_train_pca, y_train, X_test_pca, y_test)
 
-    print(f"Average train accuracy: {avg_train_accuracy}")
-    print(f"Average test accuracy: {avg_test_accuracy}")
+    print(f"Average train accuracy: {avg_train_accuracy}%")
+    print(f"Average test accuracy: {avg_test_accuracy}%")
 
     

@@ -31,8 +31,8 @@ if __name__ == "__main__":
     rf = RandomForestClassifier(criterion='gini', max_depth=7, max_features='sqrt', min_samples_leaf=1, n_estimators=50)
     
     scores_train, scores_test, models, avg_train_accuracy, avg_test_accuracy = train_model(rf, 5, X_train_pca, y_train, X_test_pca, y_test)
-    print(f"Average train accuracy: {avg_train_accuracy}")
-    print(f"Average test accuracy: {avg_test_accuracy}")
+    print(f"Average train accuracy: {avg_train_accuracy}%")
+    print(f"Average test accuracy: {avg_test_accuracy}%")
 
     best_model_index = np.argmax(scores_test)
     best_model = models[best_model_index]
