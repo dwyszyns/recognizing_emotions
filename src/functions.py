@@ -1,9 +1,11 @@
 from sklearn.decomposition import PCA
 from sklearn.metrics import accuracy_score
+import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 import dlib
 import glob
+
 
 
 def extract_landmarks(image:np.array, predictor, detector):
@@ -103,7 +105,6 @@ def preprocess_images_from_dataset(emotion_labels, directory=""):
 
 
 #Functions for Adaboost and Random Forest
-
 def perform_pca(X_train, X_test):
     pca = PCA(n_components=100)
     
@@ -114,19 +115,6 @@ def perform_pca(X_train, X_test):
     X_test_pca = pca.transform(X_test_flat)
     
     return X_train_pca, X_test_pca
-
-def accuracy_class_wise(y_true, y_pred):
-    class_accuracy = {}
-    unique_classes = np.unique(y_true)
-    
-    for class_label in unique_classes:
-        indices = np.where(y_true == class_label)[0]
-        class_predictions = y_pred[indices]
-        class_true_labels = y_true[indices]
-        accuracy = np.mean(class_predictions == class_true_labels)
-        class_accuracy[class_label] = accuracy
-    
-    return class_accuracy
 
 
 def train_model(model, it_num, X_train, y_train, X_test, y_test):
@@ -147,3 +135,31 @@ def train_model(model, it_num, X_train, y_train, X_test, y_test):
     avg_test_accuracy = np.mean(scores_test)
     
     return scores_train, scores_test, models, avg_train_accuracy, avg_test_accuracy
+
+
+#Functions for CNN
+def scale_and_one_hot_encode(dataset, num_of_emotions):
+    X_train, y_train, X_test, y_test = dataset
+    X_train = X_train / 255.0
+    X_test = X_test / 255.0
+    
+    y_train = np.eye(num_of_emotions)[y_train]
+    y_test = np.eye(num_of_emotions)[y_test]
+    
+    return X_train, y_train, X_test, y_test
+
+
+def make_plot_losses_per_epochs(losses):
+    avg_losses = np.mean(losses, axis=0)
+    plt.figure(figsize=(10, 6))
+
+    for i, epoch_data in enumerate(losses):
+        plt.plot(epoch_data, label=f'Uruchomienie nr {i+1}', linestyle='--')
+        
+    plt.plot(avg_losses, label='Średnia strata', color='black', linewidth=3)
+
+    plt.xlabel('Liczba epok')
+    plt.ylabel('Wartość funkcji straty')
+    plt.title('Wykres strat treningowych w kolejnych epokach')
+    plt.legend()
+    plt.show()
