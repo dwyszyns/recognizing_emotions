@@ -13,8 +13,6 @@ Aplikacja webowa napisana w Pythonie z wykorzystaniem frameworka FastAPI umożli
     - [Uruchomienie serwisu](#uruchomienie-serwisu)
     - [Uczenie własnego modelu](#uczenie-własnego-modelu)
 3. [Opis struktury projektu](#opis-struktury-projektu)
-4. [Opis testów aplikacji](#opis-testow-aplikacji)
-
 ---
 
 ## Wymagania i Instalacja
@@ -76,21 +74,57 @@ Aby uruchomić serwis do rozpoznawania emocji ze zdjęć oraz obrazu z kamery, w
 
 #### Najwyższe uzyskane średnie wyniki dokładności - przy użyciu algorytmu z pliku `complex_cnn.py`:
 - **RAF-DB**:
-  - Testowe: 56%
-  - Treningowe: 66%
+  - dane testowe: 56%
+  - dane treningowe: 66%
 - **CK+:**
-  - Testowe: 81%
-  - Treningowe: 90%
+  - dane testowe: 81%
+  - dane treningowe: 90%
 
 ---
 
 ## Opis struktury projektu
 
-Tu opisać wszystkie pliki i ich zawartości.
+- **src**  
+  Folder zawierający kody modeli uczenia maszynowego używane do trenowania:
+  - `adaboost_algorithm.py` – implementacja modelu AdaBoost.
+  - `random_forest_algorithm.py` – implementacja modelu Random Forest.
+  - `complex_cnn.py` – implementacja złożonych sieci konwolucyjnych przy użyciu biblioteki Tensorflow.
+  - `simple_cnn.py` – implementacja uproszczonej wersji sieci konwolucyjnych napisanych od zera.
+  - `functions.py` – implementacja funkcji, które są wykorzystywane podczas uczenia wymienionych metod. Znajdują się tam funkcje, które służą do przetwarzania obrazu ze zbioru danych oraz ekstrakcji cech ze zdjęć.
 
----
+- **static**  
+  Zawiera zasoby statyczne wykorzystywane w aplikacji:
+  - Folder `css`: Plik `style.css`, który definiuje styl aplikacji.
+  - Zdjęcia: Obrazy używane w aplikacji, np. jako przykłady czy logo.
 
-## Opis testów aplikacji
+- **templates**  
+  Folder przechowujący szablony HTML aplikacji webowej FastAPI. Wśród nich znajdują się: 
+  - `index.html` – szablon strony głównej aplikacji.
+  - `analyze_image.html` – szablon strony do przesyłania zdjęcia przekazywanego do analizy emocji.
+  - `result.html` – szablon strony z wynikami przewidzianej emocji oraz zdjęcia, na którym to wykryto.
+  - `camera.html` – szablon strony, na której możliwa jest analiza emocji z obrazu z kamery.
+  - `about.html` – szablon strony z głównymi informacjami o aplikacji oraz autorze.
+  - `error.html` – szablon strony, która informuje o błędzie w przesłanym zdjęciu lub przy analizie.
 
-Tu opisać wszystkie pliki i ich zawartości.
+- **tests**  
+  Folder z testami:
+  - Folder `img`: Zawiera zdjęcia wykorzystywane do testowania aplikacji.
+  - `test_main.py`: Skrypt zawierający testy jednostkowe, integracyjne, walidacyjne, systemowe oraz akceptacyjne dla `main.py`.
+
+- **README.md**  
+  Dokumentacja projektu, zawierająca informacje o instalacji, uruchamianiu oraz celach aplikacji.
+
+- **haarcascade_frontalface_default.xml**  
+  Plik używany do wykrywania twarzy przy pomocy algorytmu Haar Cascade.
+
+- **main.py**  
+  Główny kod aplikacji FastAPI:
+  - Definiuje wszystkie endpointy.
+  - Obsługuje przetwarzanie obrazów oraz logikę aplikacji.
+
+- **model_CNN.h5**  
+  Wstępnie nauczony model sieci konwolucyjnych (CNN) bazujący na zbiorze RAF-DB, stworzony przy użyciu kodu z pliku `complex_cnn.py`.
+
+- **requirements.txt**  
+  Plik definiujący wymagania dla projektu – lista bibliotek Python potrzebnych do działania aplikacji.
 
