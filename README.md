@@ -1,26 +1,27 @@
-# Aplikacja do Rozpoznawania Emocji
+# Emotion Recognition Application
 
-Aplikacja webowa napisana w Pythonie z wykorzystaniem frameworka FastAPI umożliwia rozpoznawanie emocji na podstawie zdjęć oraz obrazu z kamery. Użytkownik może także przeprowadzić proces trenowania własnego modelu uczenia maszynowego na dostarczonych danych. Narzędzie jest dedykowane do analizy emocji oraz eksperymentowania z algorytmami rozpoznawania emocji.
+A web application written in Python using the FastAPI framework for recognizing emotions based on images and live camera feed. The user can also train a custom machine learning model on provided data. This tool is dedicated to analyzing emotions and experimenting with emotion recognition algorithms.
 
 ---
 
-# Spis treści
+# Table of Contents
 
-1. [Wymagania i Instalacja](#wymagania-i-instalacja)
-    - [Wymagania wstępne](#wymagania-wstępne)
-    - [Kroki instalacji](#kroki-instalacji)
-2. [Uruchamianie aplikacji](#uruchamianie-aplikacji)
-    - [Uruchomienie serwisu](#uruchomienie-serwisu)
-    - [Uczenie własnego modelu](#uczenie-własnego-modelu)
-3. [Opis struktury projektu](#opis-struktury-projektu)
+1. [Requirements and Installation](#requirements-and-installation)  
+    - [Prerequisites](#prerequisites)  
+    - [Installation Steps](#installation-steps)  
+2. [Running the Application](#running-the-application)  
+    - [Running the Service](#running-the-service)  
+    - [Training a Custom Model](#training-a-custom-model)  
+3. [Project Structure](#project-structure)
+
 ---
 
-## Wymagania i Instalacja
+## Requirements and Installation
 
-### Wymagania wstępne
+### Prerequisites
 
 - **Python**: 3.10.12
-- **Conda** lub **venv** (dla środowisk wirtualnych)
+- **Conda** or **venv** (for virtual environments)
     ```bash
     sudo apt-get install build-essential cmake
     sudo apt-get install libgtk-3-dev
@@ -29,102 +30,102 @@ Aplikacja webowa napisana w Pythonie z wykorzystaniem frameworka FastAPI umożli
 
 ---
 
-### Kroki instalacji
+### Installation Steps
 
-#### 1. Utworzenie środowiska wirtualnego:
+#### 1. Create a virtual environment:
 
-- **Za pomocą Conda:**
+- **Using Conda:**
   ```bash
   conda create --name myenv python=3.10.12
   conda activate myenv
   ```
 
-- **Za pomocą venv:**
+- **Using venv:**
   ```bash
   python3.10 -m venv myenv
   source myenv/bin/activate  # Linux/Mac
   myenv\Scripts\activate     # Windows
   ```
 
-#### 2. Instalacja wymaganych pakietów:
+#### 2. Install required packages:
   ```bash
   pip install -r requirements.txt
   ```
 
-#### 3. Pobranie repozytorium:
+#### 3. Clone the repository:
   ```bash
   git clone https://github.com/dwyszyns/recognizing_emotions.git
   ```
 
 ---
 
-## Uruchamianie aplikacji
+## Running the Application
 
-### Uruchomienie serwisu
+### Running the Service
 
-Aby uruchomić serwis do rozpoznawania emocji ze zdjęć oraz obrazu z kamery, wykonaj następujące polecenie w terminalu:
+To run the service for recognizing emotions from images and the camera feed, execute the following command in the terminal:
   ```bash
   uvicorn main:app --reload
   ```
 
-### Uczenie własnego modelu
+### Training a Custom Model
 
-1. Pobierz odpowiedni zbór danych i podziel go na dwa katalogi: `train` oraz `test`.
-2. Uruchom jedną z metod znajdujących się w folderze `src` w celu nauczenia modelu.
+1. Download the appropriate dataset and divide it into two directories: `train` and `test`.
+2. Run one of the methods available in the `src` folder to train the model.
 
-#### Najwyższe uzyskane średnie wyniki dokładności - przy użyciu algorytmu z pliku `complex_cnn.py`:
-- **RAF-DB**:
-  - dane testowe: 56%
-  - dane treningowe: 66%
+#### Highest Achieved Average Accuracy Results - Using the algorithm from `complex_cnn.py`:
+- **RAF-DB:**
+  - Test Data: 56%
+  - Training Data: 66%
 - **CK+:**
-  - dane testowe: 81%
-  - dane treningowe: 90%
+  - Test Data: 81%
+  - Training Data: 90%
 
 ---
 
-## Opis struktury projektu
+## Project Structure
 
 - **src**  
-  Folder zawierający kody modeli uczenia maszynowego używane do trenowania:
-  - `adaboost_algorithm.py` – implementacja modelu AdaBoost.
-  - `random_forest_algorithm.py` – implementacja modelu Random Forest.
-  - `complex_cnn.py` – implementacja złożonych sieci konwolucyjnych przy użyciu biblioteki Tensorflow.
-  - `simple_cnn.py` – implementacja uproszczonej wersji sieci konwolucyjnych napisanych od zera.
-  - `functions.py` – implementacja funkcji, które są wykorzystywane podczas uczenia wymienionych metod. Znajdują się tam funkcje, które służą do przetwarzania obrazu ze zbioru danych oraz ekstrakcji cech ze zdjęć.
+  Contains machine learning model code used for training:
+  - `adaboost_algorithm.py` – Implementation of the AdaBoost model.
+  - `random_forest_algorithm.py` – Implementation of the Random Forest model.
+  - `complex_cnn.py` – Implementation of complex convolutional networks using TensorFlow.
+  - `simple_cnn.py` – Implementation of a simplified version of convolutional networks written from scratch.
+  - `functions.py` – Functions used during the training process. These include image preprocessing and feature extraction functions.
 
 - **static**  
-  Zawiera zasoby statyczne wykorzystywane w aplikacji:
-  - Folder `css`: Plik `style.css`, który definiuje styl aplikacji.
-  - Zdjęcia: Obrazy używane w aplikacji, np. jako przykłady czy logo.
+  Contains static resources used in the application:
+  - `css` folder: Includes the `style.css` file that defines the application style.
+  - Images: Pictures used in the application, e.g., examples or logos.
 
 - **templates**  
-  Folder przechowujący szablony HTML aplikacji webowej FastAPI. Wśród nich znajdują się: 
-  - `index.html` – szablon strony głównej aplikacji.
-  - `analyze_image.html` – szablon strony do przesyłania zdjęcia przekazywanego do analizy emocji.
-  - `result.html` – szablon strony z wynikami przewidzianej emocji oraz zdjęcia, na którym to wykryto.
-  - `camera.html` – szablon strony, na której możliwa jest analiza emocji z obrazu z kamery.
-  - `about.html` – szablon strony z głównymi informacjami o aplikacji oraz autorze.
-  - `error.html` – szablon strony, która informuje o błędzie w przesłanym zdjęciu lub przy analizie.
+  Folder containing HTML templates for the FastAPI web application. These include: 
+  - `index.html` – Main page template.
+  - `analyze_image.html` – Template for uploading an image for emotion analysis.
+  - `result.html` – Template displaying the predicted emotion and the analyzed image.
+  - `camera.html` – Template for analyzing emotions from the camera feed.
+  - `about.html` – Template with general information about the application and its author.
+  - `error.html` – Template for error messages when an issue occurs with the uploaded image or analysis.
 
 - **tests**  
-  Folder z testami:
-  - Folder `img`: Zawiera zdjęcia wykorzystywane do testowania aplikacji.
-  - `test_main.py`: Skrypt zawierający testy jednostkowe, integracyjne, walidacyjne, systemowe oraz akceptacyjne dla `main.py`.
+  Folder containing tests:
+  - `img` folder: Contains images used for testing the application.
+  - `test_main.py`: Script containing unit, integration, validation, system, and acceptance tests for `main.py`.
 
 - **README.md**  
-  Dokumentacja projektu, zawierająca informacje o instalacji, uruchamianiu oraz celach aplikacji.
+  Project documentation, including information on installation, usage, and application objectives.
 
 - **haarcascade_frontalface_default.xml**  
-  Plik używany do wykrywania twarzy przy pomocy algorytmu Haar Cascade.
+  File used for face detection with the Haar Cascade algorithm.
 
 - **main.py**  
-  Główny kod aplikacji FastAPI:
-  - Definiuje wszystkie endpointy.
-  - Obsługuje przetwarzanie obrazów oraz logikę aplikacji.
+  The main code for the FastAPI application:
+  - Defines all endpoints.
+  - Handles image processing and application logic.
 
 - **model_CNN.h5**  
-  Wstępnie nauczony model sieci konwolucyjnych (CNN) bazujący na zbiorze RAF-DB, stworzony przy użyciu kodu z pliku `complex_cnn.py`.
+  Pretrained convolutional neural network (CNN) model based on the RAF-DB dataset, created using the code in `complex_cnn.py`.
 
 - **requirements.txt**  
-  Plik definiujący wymagania dla projektu – lista bibliotek Python potrzebnych do działania aplikacji.
+  File listing the Python libraries required for the project to run.
 
