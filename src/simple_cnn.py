@@ -17,10 +17,10 @@ class Layer(ABC):
         pass
 
     @abstractmethod
-    def backward(self, dL_dout):
+    def backward(self, grad_out):
         """
         Perform the backward pass for the layer.
-        :param dL_dout: Gradient of the loss with respect to the output.
+        :param grad_out: Gradient of the loss with respect to the output.
         :return: Gradient of the loss with respect to the input.
         """
         pass
@@ -363,6 +363,6 @@ if __name__ == "__main__":
     dataset = preprocess_images_from_dataset(labels)
     dataset = scale_and_one_hot_encode(dataset, len(labels))
     
-    train_losses, test_losses = run_cnn_experiments(dataset, 1, labels)
+    train_losses, test_losses = run_cnn_experiments(dataset, 2, labels)
     make_plot_losses_per_epochs(train_losses)
     

@@ -1,16 +1,12 @@
 import numpy as np
-import cv2
-import glob
-import dlib
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
-from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.optimizers import Adam
 from sklearn.metrics import accuracy_score
 from functions import make_plot_losses_per_epochs, preprocess_images_from_dataset, scale_and_one_hot_encode
 
 
-def create_cnn_model(input_shape, num_classes, learning_rate, conv_layers=6, filters=[32, 64, 128, 256]):
+def create_cnn_model(input_shape: tuple, num_classes: int, learning_rate: float, conv_layers: int=6, filters: list=[32, 64, 128, 256]):
     model = Sequential()
 
     model.add(Conv2D(filters[0], kernel_size=(3, 3), activation='relu', input_shape=input_shape, padding='same'))
@@ -21,10 +17,8 @@ def create_cnn_model(input_shape, num_classes, learning_rate, conv_layers=6, fil
         model.add(MaxPooling2D(pool_size=(2, 2)))
 
     model.add(Flatten())
-
     model.add(Dense(128, activation='relu'))
     model.add(Dropout(0.5))  
-
     model.add(Dense(num_classes, activation='softmax')) 
 
     model.compile(optimizer=Adam(learning_rate=learning_rate),
@@ -49,7 +43,7 @@ def test_model(X_test: np.array, y_test: np.array, model: Sequential):
     return y_pred, accuracy
 
 
-def train_single_run(input_shape, X_train, y_train, X_test, y_test):
+def train_single_run(input_shape: tuple, X_train: np.array, y_train: np.array, X_test: np.array, y_test: np.array):
     model = create_cnn_model(input_shape,
                                 num_classes=len(labels),
                                 learning_rate=0.001,
@@ -70,7 +64,7 @@ def train_single_run(input_shape, X_train, y_train, X_test, y_test):
     return train_accuracy, test_accuracy, train_losses, val_losses
     
 
-def run_cnn_experiments(dataset, runs):
+def run_cnn_experiments(dataset: tuple, runs: int):
     X_train, y_train, X_test, y_test = dataset
     input_shape = X_train.shape[1:]
     all_epoch_train_losses = []

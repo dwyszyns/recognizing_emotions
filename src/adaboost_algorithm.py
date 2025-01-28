@@ -1,8 +1,3 @@
-import numpy as np
-import cv2
-import glob
-import dlib
-from sklearn.decomposition import PCA
 from sklearn.ensemble import AdaBoostClassifier
 from functions import preprocess_images_from_dataset, perform_pca, train_model
 

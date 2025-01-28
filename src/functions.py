@@ -7,7 +7,6 @@ import dlib
 import glob
 
 
-
 def extract_landmarks(image:np.array, predictor, detector):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     rects = detector(gray, 1)
@@ -22,7 +21,7 @@ def extract_landmarks(image:np.array, predictor, detector):
         return np.zeros((68 * 2,))
 
 
-def replace_zero_landmarks(landmarks):
+def replace_zero_landmarks(landmarks: np.array):
     zero_landmarks = np.zeros((68, 2), dtype=int)
     
     processed_landmarks = [
@@ -30,6 +29,7 @@ def replace_zero_landmarks(landmarks):
         for landmark in landmarks
     ]
     return np.array(processed_landmarks)
+
 
 def load_data_with_landmarks(emotion_list: list, base_dir: str ="train", img_size: tuple =(48, 48)):
     X = []
@@ -93,7 +93,7 @@ def change_image(landmarks: np.array, images: np.array):
     return np.array(colored_images).reshape(-1, 48, 48, 1)
 
 
-def preprocess_images_from_dataset(emotion_labels, directory=""):
+def preprocess_images_from_dataset(emotion_labels: list, directory: str =""):
     print("----------Preprocessing images from dataset----------")
     X_train, y_train, landmarks_train = load_data_with_landmarks(emotion_labels, f"{directory}train")
     X_test, y_test, landmarks_test = load_data_with_landmarks(emotion_labels, f"{directory}test")
@@ -104,8 +104,8 @@ def preprocess_images_from_dataset(emotion_labels, directory=""):
     return X_train, y_train, X_test, y_test
 
 
-#Functions for Adaboost and Random Forest
-def perform_pca(X_train, X_test):
+# Functions for Adaboost and Random Forest
+def perform_pca(X_train: np.array, X_test: np.array):
     pca = PCA(n_components=100)
     
     X_train_flat = X_train.reshape(X_train.shape[0], -1)
@@ -117,7 +117,7 @@ def perform_pca(X_train, X_test):
     return X_train_pca, X_test_pca
 
 
-def train_model(model, it_num, X_train, y_train, X_test, y_test):
+def train_model(model, it_num: int, X_train: np.array, y_train: np.array, X_test: np.array, y_test: np.array):
     scores_test = []
     scores_train = []
     models = []
@@ -137,8 +137,8 @@ def train_model(model, it_num, X_train, y_train, X_test, y_test):
     return scores_train, scores_test, models, avg_train_accuracy, avg_test_accuracy
 
 
-#Functions for CNN
-def scale_and_one_hot_encode(dataset, num_of_emotions):
+# Functions for CNN
+def scale_and_one_hot_encode(dataset: tuple, num_of_emotions: list):
     X_train, y_train, X_test, y_test = dataset
     X_train = X_train / 255.0
     X_test = X_test / 255.0
@@ -149,7 +149,7 @@ def scale_and_one_hot_encode(dataset, num_of_emotions):
     return X_train, y_train, X_test, y_test
 
 
-def make_plot_losses_per_epochs(losses):
+def make_plot_losses_per_epochs(losses: list):
     avg_losses = np.mean(losses, axis=0)
     plt.figure(figsize=(10, 6))
 

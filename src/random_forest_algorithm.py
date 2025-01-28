@@ -1,11 +1,7 @@
 import numpy as np
-import cv2
-import glob
-import dlib
-import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.metrics import confusion_matrix, accuracy_score
+from sklearn.metrics import confusion_matrix
 from sklearn.ensemble import RandomForestClassifier
 from functions import preprocess_images_from_dataset, perform_pca, train_model
 
