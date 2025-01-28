@@ -48,7 +48,7 @@ def test_emotion_prediction(file_path, expected_emotions):
 @pytest.mark.parametrize(
     "file_path, expected_status_code, expected_response_text",
     [
-        ("tests/img/black_photo.PNG", 200, "Try another image"),
+        ("tests/img/black_photo.PNG", 200, "Try Another Image"),
         ("tests/img/group_photo.jpg", 200, "emotion"),
     ]
 )
