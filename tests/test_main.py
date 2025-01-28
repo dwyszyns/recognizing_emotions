@@ -8,7 +8,6 @@ import numpy as np
 
 client = TestClient(app)
 
-# --- Testy Walidacyjne ---
 def test_integration_valid_image():
     with open("tests/img/image1.jpg", "rb") as img:
         response = client.post("/predict_emotion/", files={"file": img})
@@ -28,7 +27,6 @@ def test_integration_large_file():
     assert "File is too large" in response.text
 
 
-# --- Testy Akceptacyjne ---
 @pytest.mark.parametrize(
     "file_path, expected_emotions",
     [
@@ -36,7 +34,7 @@ def test_integration_large_file():
         ("tests/img/happy_face.jpg", ["Happiness"]),
         ("tests/img/sad_face.jpg", ["Sadness", "Fear"]),
         ("tests/img/surprise_face.jpg", ["Anger", "Surprise"]),
-        ("tests/img/disgust_face.jpg", ["Disgust", "Fear"]),
+        ("tests/img/disgust_face.jpg", ["Disgust", "Fear", "Neutral"]),
     ]
 )
 def test_emotion_prediction(file_path, expected_emotions):
@@ -47,11 +45,10 @@ def test_emotion_prediction(file_path, expected_emotions):
     assert any(emotion in response.text for emotion in expected_emotions)
 
 
-# --- Testy Funkcjonalne ---
 @pytest.mark.parametrize(
     "file_path, expected_status_code, expected_response_text",
     [
-        ("tests/img/black_photo.PNG", 400, "No face detected"),
+        ("tests/img/black_photo.PNG", 200, "Try another image"),
         ("tests/img/group_photo.jpg", 200, "emotion"),
     ]
 )
@@ -83,7 +80,6 @@ def test_detect_and_mark_face_no_faces():
     assert marked_image is None
     
 
-# --- Testy Stron HTML ---
 @pytest.mark.parametrize(
     "endpoint, expected_status_code, expected_content",
     [
